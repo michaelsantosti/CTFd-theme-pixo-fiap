@@ -25,6 +25,21 @@
 			'theme_settings': {{ Configs.theme_settings | tojson }}
 		}
 	</script>
+	<style type="text/css">
+        .style1 {
+            color: #AA42C3;
+        }
+        .footer-block {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .credits {
+            font-size: 10px;
+            margin-top: 10px;
+        }
+    </style>
 	{{ Configs.theme_header }}
 </head>
 <body>
@@ -38,19 +53,10 @@
 
 <footer class="footer">
 	<div class="container text-center">
-		<div>
-			<a href="https://github.com/hmrserver/CTFd-theme-pixo" class="text-secondary">
-				<small class="text-muted">
-					{% trans %}Theme designed by PRI4CE{% endtrans %}
-				</small>
-			</a>
-		</div>
-		<a href="https://ctfd.io" class="text-secondary">
-			<small class="text-muted">
-				{% trans %}Powered by CTFd{% endtrans %}
-			</small>
-		</a>
-	</div>
+		<div class="text-center footer-block">
+ 		   <div class="credits">
+             <span class="style1">Powered by CTFd</span> - <span class="style1">Theme By PRI4CE</span>
+   	 </div>
 </footer>
 
 	<script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
