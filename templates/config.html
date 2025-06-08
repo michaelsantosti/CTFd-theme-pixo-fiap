@@ -1,12 +1,12 @@
 <form>
   <div class="form-group">
-    <label>Challenge Window Size</label>
+    <label>{% trans %}Challenge Window Size{% endtrans %}</label>
     <select class="form-control custom-select" name="challenge_window_size">
-        <option value="sm">Small</option>
-        <option value="norm">Normal</option>
-        <option value="lg">Large</option>
-        <option value="xl">Extra Large</option>
+        <option value="sm">{% trans %}Small{% endtrans %}</option>
+        <option value="norm">{% trans %}Normal{% endtrans %}</option>
+        <option value="lg">{% trans %}Large{% endtrans %}</option>
+        <option value="xl">{% trans %}Extra Large{% endtrans %}</option>
     </select>
   </div>
-  <button type="submit" class="btn btn-primary float-right">Update</button>
+  <button type="submit" class="btn btn-primary float-right">{% trans %}Update{% endtrans %}</button>
 </form>

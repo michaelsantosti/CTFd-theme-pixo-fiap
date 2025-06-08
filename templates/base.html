@@ -36,14 +36,22 @@
 		{% endblock %}
 	</main>
 
-	<footer class="footer">
-		<div class="container text-center">
-			<div><a href="https://github.com/hmrserver/CTFd-theme-pixo" class="text-secondary"><small class="text-muted">Theme designed by PRI4CE</small></a></div>
-			<a href="https://ctfd.io" class="text-secondary">
-				<small class="text-muted">Powered by CTFd</small>
+<footer class="footer">
+	<div class="container text-center">
+		<div>
+			<a href="https://github.com/hmrserver/CTFd-theme-pixo" class="text-secondary">
+				<small class="text-muted">
+					{% trans %}Theme designed by PRI4CE{% endtrans %}
+				</small>
 			</a>
 		</div>
-	</footer>
+		<a href="https://ctfd.io" class="text-secondary">
+			<small class="text-muted">
+				{% trans %}Powered by CTFd{% endtrans %}
+			</small>
+		</a>
+	</div>
+</footer>
 
 	<script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
 	<script defer src="{{ url_for('views.themes', path='js/core.js') }}"></script>

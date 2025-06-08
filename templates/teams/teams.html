@@ -6,7 +6,7 @@
 {% block content %}
 <div class="jumbotron">
 	<div class="container">
-		<h1>Teams</h1>
+		<h1>{% trans %}Teams{% endtrans %}</h1>
 	</div>
 </div>
 <div class="container">
@@ -14,10 +14,10 @@
 		<div class="col-md-12">
 			{% if q and field %}
 			<h5 class="text-muted text-center">
-				Searching for teams with <strong>{{ field }}</strong> matching <strong>{{ q }}</strong>
+				{% trans %}Searching for teams with{% endtrans %} <strong>{{ field }}</strong> {% trans %}matching{% endtrans %} <strong>{{ q }}</strong>
 			</h5>
 			<h6 class="text-muted text-center pb-3">
-				Page {{ teams.page }} of {{ teams.total }} results
+				{% trans %}Page{% endtrans %} {{ teams.page }} {% trans %}of{% endtrans %} {{ teams.total }} {% trans %}results{% endtrans %}
 			</h6>
 			{% endif %}
 
@@ -27,7 +27,7 @@
 					{{ form.field(class="form-control custom-select w-100") }}
 				</div>
 				<div class="form-group col-md-8">
-					{{ form.q(class="form-control w-100", placeholder="Search for matching teams") }}
+					{{ form.q(class="form-control w-100", placeholder=_("Search for matching teams")) }}
 				</div>
 				<div class="form-group col-md-2">
 					<button type="submit" class="btn btn-primary w-100">
@@ -46,10 +46,10 @@
 			<table class="table table-striped">
 				<thead>
 					<tr>
-						<td><b>Team</b></td>
-						<td><b>Website</b></td>
-						<td class="d-none d-md-table-cell d-lg-table-cell"><b>Affiliation</b></td>
-						<td class="d-none d-md-table-cell d-lg-table-cell"><b>Country</b></td>
+						<td><b>{% trans %}Team{% endtrans %}</b></td>
+						<td><b>{% trans %}Website{% endtrans %}</b></td>
+						<td class="d-none d-md-table-cell d-lg-table-cell"><b>{% trans %}Affiliation{% endtrans %}</b></td>
+						<td class="d-none d-md-table-cell d-lg-table-cell"><b>{% trans %}Country{% endtrans %}</b></td>
 					</tr>
 				</thead>
 				<tbody>
@@ -63,7 +63,7 @@
 						{% endif %}
 						{% if team.oauth_id %}
 							<a href="https://majorleaguecyber.org/t/{{ team.name }}">
-								<span class="badge badge-primary">Official</span>
+								<span class="badge badge-primary">{% trans %}Official{% endtrans %}</span>
 							</a>
 						{% endif %}
 						</td>
@@ -78,12 +78,10 @@
 							{% if team.affiliation %}
 								{% if team.affiliation | length > 50 %}
 								<span data-toggle="tooltip" data-placement="top" title="{{ team.affiliation }}">
-									{% if team.affiliation %}{{ team.affiliation | truncate(50) }}{% endif %}
+									{{ team.affiliation | truncate(50) }}
 								</span>
 								{% else %}
-								<span>
-									{% if team.affiliation %}{{ team.affiliation | truncate(50) }}{% endif %}
-								</span>
+								<span>{{ team.affiliation | truncate(50) }}</span>
 								{% endif %}
 							{% endif %}
 						</td>
@@ -104,7 +102,8 @@
 	{% if teams.pages > 1 %}
 	<div class="row">
 		<div class="col-md-12">
-			<div class="text-center">Page
+			<div class="text-center">
+				{% trans %}Page{% endtrans %}
 				<br>
 				{% if teams.page != 1 %}
 				<a href="{{ prev_page }}">&lt;&lt;&lt;</a>

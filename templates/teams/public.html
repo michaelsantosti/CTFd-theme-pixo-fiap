@@ -9,7 +9,7 @@
 			<h1 id="team-id" team-id="{{ team.id }}">{{ team.name }}</h1>
 			{% if team.oauth_id %}
 				<a href="https://majorleaguecyber.org/t/{{ team.name }}">
-					<h3><span class="badge badge-primary">Official</span></h3>
+					<h3><span class="badge badge-primary">{% trans %}Official{% endtrans %}</span></h3>
 				</a>
 			{% endif %}
 			{% if team.affiliation %}
@@ -31,20 +31,15 @@
 				</h3>
 			{% endfor %}
 			<h2 id="team-place" class="text-center">
-				{# This intentionally hides the team's place when scores are hidden because this can be their internal profile
-			and we don't want to leak their place in the CTF. #}
-				{# Public page hiding is done at the route level #}
-				{% if scores_visible() %}
-					{% if place %}
-						{{ place }}
-						<small>place</small>
-					{% endif %}
+				{% if scores_visible() and place %}
+					{{ place }}
+					<small>{% trans %}place{% endtrans %}</small>
 				{% endif %}
 			</h2>
 			<h2 id="team-score" class="text-center">
 				{% if score %}
 					{{ score }}
-					<small>points</small>
+					<small>{% trans %}points{% endtrans %}</small>
 				{% endif %}
 			</h2>
 
@@ -58,6 +53,7 @@
 			</div>
 		</div>
 	</div>
+
 	<div class="container">
 		{% include "components/errors.html" %}
 
@@ -65,12 +61,12 @@
 
 		<div class="row">
 			<div class="col-md-12">
-				<h3>Members</h3>
+				<h3>{% trans %}Members{% endtrans %}</h3>
 				<table class="table table-striped">
 					<thead>
 					<tr>
-						<td><b>User Name</b></td>
-						<td><b>Score</b></td>
+						<td><b>{% trans %}User Name{% endtrans %}</b></td>
+						<td><b>{% trans %}Score{% endtrans %}</b></td>
 					</tr>
 					</thead>
 					<tbody>
@@ -90,7 +86,7 @@
 		</div>
 
 		{% if solves or awards %}
-			<div class="row  challenge-charts-box">
+			<div class="row challenge-charts-box">
 				<div class="col-md-6 d-none d-md-block d-lg-block challenge-charts">
 					<div id="keys-pie-graph" class="d-flex align-items-center">
 						<div class="text-center w-100">
@@ -120,7 +116,7 @@
 			{% if awards %}
 				<div class="row">
 					<div class="col-md-12">
-						<h3>Awards</h3>
+						<h3>{% trans %}Awards{% endtrans %}</h3>
 					</div>
 					{% for award in awards %}
 						<div class="col-md-3 col-sm-6">
@@ -135,20 +131,19 @@
 						</div>
 					{% endfor %}
 				</div>
-
 				<br>
 			{% endif %}
 
 			<div class="row">
 				<div class="col-md-12">
-					<h3>Solves</h3>
+					<h3>{% trans %}Solves{% endtrans %}</h3>
 					<table class="table table-striped">
 						<thead>
 						<tr>
-							<td><b>Challenge</b></td>
-							<td class="d-none d-md-block d-lg-block"><b>Category</b></td>
-							<td><b>Value</b></td>
-							<td><b>Time</b></td>
+							<td><b>{% trans %}Challenge{% endtrans %}</b></td>
+							<td class="d-none d-md-block d-lg-block"><b>{% trans %}Category{% endtrans %}</b></td>
+							<td><b>{% trans %}Value{% endtrans %}</b></td>
+							<td><b>{% trans %}Time{% endtrans %}</b></td>
 						</tr>
 						</thead>
 						<tbody>
@@ -173,7 +168,7 @@
 		{% else %}
 			<div class="row min-vh-25">
 				<h3 class="opacity-50 text-center w-100 justify-content-center align-self-center">
-					No solves yet
+					{% trans %}No solves yet{% endtrans %}
 				</h3>
 			</div>
 		{% endif %}
