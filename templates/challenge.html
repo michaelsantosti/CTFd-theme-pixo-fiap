@@ -58,7 +58,7 @@
 												{% trans %}View Hint{% endtrans %}
 											{% else %}
 												{% if hint.cost %}
-													{% trans %}Unlock Hint for {{ hint.cost }} points{% endtrans %}
+													{% trans cost=hint.cost %}Unlock Hint for {{ cost }} points{% endtrans %}
 												{% else %}
 													{% trans %}View Hint{% endtrans %}
 												{% endif %}
