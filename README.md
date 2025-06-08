@@ -1,7 +1,7 @@
 # Pixo Theme
 Pixo is a Retro Styled Theme for CTFd which consists of numerous features like OLD CRT like flicker, Old school fonts and notification sound which gives the theme a 90s look.
 
-Compatible with CTFd **Version 3.3.0**
+Compatible with CTFd **Version 3.7.7**
 
 Few Screenshots:
   
