@@ -61,8 +61,8 @@
 							{{ form.website(class="form-control", value=website or "") }}
 						</div>
 		                <div class="form-group">
-                   			 <b>{{ form.language.label(class="form-label") }}</b>
-                  			  {{ form.language(class="form-select", value=language) }}
+                   			 <b>{{ form.language.label }}</b>
+                  			  {{ form.language(class="form-control custom-select", value=language) }}
                  		</div>
 						<div class="form-group">
 							<b>{{ form.country.label }}</b>
