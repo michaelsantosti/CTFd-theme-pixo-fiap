@@ -8,21 +8,21 @@
 				<li class="nav-item">
 					<a class="nav-link active" href="#challenge">{% trans %}Challenge{% endtrans %}</a>
 				</li>
-				{% block solves %}
-					<li class="nav-item">
-						<a class="nav-link challenge-solves" href="#solves">
-							{% if solves != None %}
-								{{ solves }} {% if solves > 1 %}{% trans %}Solves{% endtrans %}{% else %}{% trans %}Solves{% endtrans %}{% endif %}
-							{% endif %}
-						</a>
-					</li>
-				{% endblock %}
 				{% block solution %}
 					<li class="nav-item" id="solution-tab-nav" style="display: none;">
 						<a class="nav-link challenge-solution" href="#solution">
 							{% trans %}Solution{% endtrans %}
 						</a>
 					</li>
+				{% endblock %}
+				{% block solves %}
+					{% if solves != None %}
+					<li class="nav-item">
+						<a class="nav-link challenge-solves" href="#solves">
+							{{ solves }} {% if solves > 1 %}{% trans %}Solves{% endtrans %}{% else %}{% trans %}Solves{% endtrans %}{% endif %}
+						</a>
+					</li>
+					{% endif %}
 				{% endblock %}
 			</ul>
 			<div role="tabpanel">
@@ -164,3 +164,75 @@
 		</div>
 	</div>
 </div>
+<script>
+(function() {
+	var challengeData = CTFd._internal.challenge.data;
+	var solutionId = challengeData ? challengeData.solution_id : null;
+
+	if (solutionId) {
+		$("#solution-tab-nav").show();
+	}
+
+	$(".challenge-solution").on("click", function(e) {
+		e.preventDefault();
+		$(this).tab("show");
+
+		var contentEl = $("#challenge-solution-content");
+		if (contentEl.data("loaded-id") == solutionId) {
+			return;
+		}
+
+		contentEl.html('<div class="text-center pt-3"><i class="fas fa-spinner fa-spin"></i></div>');
+
+		var urlRoot = CTFd.config.urlRoot || "";
+		var headers = {
+			"Accept": "application/json",
+			"Content-Type": "application/json",
+			"CSRF-Token": CTFd.config.csrfNonce
+		};
+
+		fetch(urlRoot + "/api/v1/solutions/" + solutionId, {
+			method: "GET",
+			credentials: "same-origin",
+			headers: headers
+		})
+		.then(function(r) { return r.json(); })
+		.then(function(response) {
+			if (response.success && response.data && response.data.html) {
+				contentEl.html(response.data.html);
+				contentEl.data("loaded-id", solutionId);
+				return;
+			}
+
+			// Solution is locked - unlock it first (free, no cost)
+			return fetch(urlRoot + "/api/v1/unlocks", {
+				method: "POST",
+				credentials: "same-origin",
+				headers: headers,
+				body: JSON.stringify({ target: solutionId, type: "solutions" })
+			})
+			.then(function(r) { return r.json(); })
+			.then(function() {
+				// Fetch solution again after unlocking
+				return fetch(urlRoot + "/api/v1/solutions/" + solutionId, {
+					method: "GET",
+					credentials: "same-origin",
+					headers: headers
+				});
+			})
+			.then(function(r) { return r.json(); })
+			.then(function(response) {
+				if (response.success && response.data && response.data.html) {
+					contentEl.html(response.data.html);
+					contentEl.data("loaded-id", solutionId);
+				} else {
+					contentEl.html('<p class="text-center text-muted pt-3">Solution not available.</p>');
+				}
+			});
+		})
+		.catch(function() {
+			contentEl.html('<p class="text-center text-danger pt-3">Error loading solution.</p>');
+		});
+	});
+})();
+</script>
