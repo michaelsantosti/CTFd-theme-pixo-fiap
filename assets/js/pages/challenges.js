@@ -91,6 +91,18 @@ const displayChal = chal => {
       $(this).tab("show");
     });
 
+    // Show or hide the Solution tab based on challenge data
+    if (challenge.data.solution_id) {
+      $("#solution-tab-nav").show();
+    } else {
+      $("#solution-tab-nav").hide();
+    }
+
+    // Handle Solution tab click
+    $(".challenge-solution").click(function(_event) {
+      loadSolution(challenge.data.solution_id);
+    });
+
     // Handle modal toggling
     $("#challenge-window").on("hide.bs.modal", function(_event) {
       $("#challenge-input").removeClass("wrong");
@@ -361,6 +373,10 @@ $(() => {
   $("#challenge-window").on("hidden.bs.modal", function(_event) {
     $(".nav-tabs a:first").tab("show");
     history.replaceState("", window.document.title, window.location.pathname);
+    // Reset solution state
+    solutionLoaded = false;
+    currentSolutionId = null;
+    $("#challenge-solution-content").empty();
   });
 
   $(".challenge-solves").click(function(_event) {
@@ -423,4 +439,29 @@ const loadHint = id => {
 
     displayUnlock(id);
   });
+};
+
+let solutionLoaded = false;
+let currentSolutionId = null;
+
+const loadSolution = id => {
+  if (!id) return;
+  if (solutionLoaded && currentSolutionId === id) return;
+
+  CTFd.fetch("/api/v1/solutions/" + id, {
+    method: "GET",
+    credentials: "same-origin",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    }
+  })
+    .then(response => response.json())
+    .then(response => {
+      if (response.success && response.data && response.data.html) {
+        $("#challenge-solution-content").html(response.data.html);
+        solutionLoaded = true;
+        currentSolutionId = id;
+      }
+    });
 };

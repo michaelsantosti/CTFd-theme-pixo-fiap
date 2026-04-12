@@ -32,6 +32,76 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+(function() {
+	// Solution display support for Pixo theme
+	var solutionLoaded = false;
+	var currentSolutionId = null;
+
+	function fetchSolution(solutionId) {
+		if (solutionLoaded && currentSolutionId === solutionId) {
+			return;
+		}
+		var urlRoot = CTFd.config.urlRoot || "";
+		fetch(urlRoot + "/api/v1/solutions/" + solutionId, {
+			method: "GET",
+			credentials: "same-origin",
+			headers: {
+				"Accept": "application/json",
+				"Content-Type": "application/json",
+				"CSRF-Token": CTFd.config.csrfNonce
+			}
+		})
+		.then(function(response) { return response.json(); })
+		.then(function(response) {
+			if (response.success && response.data && response.data.html) {
+				document.getElementById("challenge-solution-content").innerHTML = response.data.html;
+				solutionLoaded = true;
+				currentSolutionId = solutionId;
+			}
+		});
+	}
+
+	document.addEventListener("click", function(event) {
+		var target = event.target.closest(".challenge-solution");
+		if (target) {
+			var challengeData = CTFd._internal.challenge.data;
+			if (challengeData && challengeData.solution_id) {
+				fetchSolution(challengeData.solution_id);
+			}
+		}
+	});
+
+	// Use MutationObserver to detect when challenge modal content is injected
+	var observer = new MutationObserver(function(mutations) {
+		mutations.forEach(function(mutation) {
+			if (mutation.addedNodes.length > 0) {
+				var solutionTab = document.getElementById("solution-tab-nav");
+				if (solutionTab) {
+					var challengeData = CTFd._internal.challenge && CTFd._internal.challenge.data;
+					if (challengeData && challengeData.solution_id) {
+						solutionTab.style.display = "";
+					} else {
+						solutionTab.style.display = "none";
+					}
+					// Reset solution state for new challenge
+					solutionLoaded = false;
+					currentSolutionId = null;
+					var contentEl = document.getElementById("challenge-solution-content");
+					if (contentEl) {
+						contentEl.innerHTML = "";
+					}
+				}
+			}
+		});
+	});
+
+	var challengeWindow = document.getElementById("challenge-window");
+	if (challengeWindow) {
+		observer.observe(challengeWindow, { childList: true, subtree: true });
+	}
+})();
+</script>
 {% endblock %}
 
 {% block entrypoint %}

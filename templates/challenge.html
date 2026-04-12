@@ -17,6 +17,13 @@
 						</a>
 					</li>
 				{% endblock %}
+				{% block solution %}
+					<li class="nav-item" id="solution-tab-nav" style="display: none;">
+						<a class="nav-link challenge-solution" href="#solution">
+							{% trans %}Solution{% endtrans %}
+						</a>
+					</li>
+				{% endblock %}
 			</ul>
 			<div role="tabpanel">
 				<div class="tab-content">
@@ -139,6 +146,15 @@
 									<tbody id="challenge-solves-names">
 									</tbody>
 								</table>
+							</div>
+						</div>
+					</div>
+
+					<div role="tabpanel" class="tab-pane fade" id="solution">
+						<div class="row">
+							<div class="col-md-12">
+								<div class="challenge-solution-content pt-3" id="challenge-solution-content" style="white-space: pre-wrap;">
+								</div>
 							</div>
 						</div>
 					</div>
