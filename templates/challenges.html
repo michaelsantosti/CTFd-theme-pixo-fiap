@@ -41,7 +41,14 @@ window._i18n = {
 	hint: "{% trans %}Hint{% endtrans %}",
 	unlockHint: "{% trans %}Unlock Hint?{% endtrans %}",
 	unlockHintConfirm: "{% trans %}Are you sure you want to open this hint?{% endtrans %}",
-	error: "{% trans %}Error{% endtrans %}"
+	error: "{% trans %}Error{% endtrans %}",
+	// Submission status messages
+	correct: "{% trans %}Correct{% endtrans %}",
+	incorrect: "{% trans %}Incorrect{% endtrans %}",
+	alreadySolved: "{% trans %}but you already solved this{% endtrans %}",
+	tooFast: "{% trans %}You're submitting flags too fast. Try again in{% endtrans %}",
+	seconds: "{% trans %}seconds{% endtrans %}",
+	paused: "{% trans %}is paused{% endtrans %}"
 };
 
 // Runtime i18n patch for compiled JS bundle
@@ -57,28 +64,72 @@ window._i18n = {
 		"Error": t.error
 	};
 
-	// Patch "Solves" text set by JS bundle
-	var solvesObserver = new MutationObserver(function(mutations) {
-		mutations.forEach(function(m) {
-			if (m.type === "childList" || m.type === "characterData") {
-				var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
-				if (!el) return;
-				var solveEls = el.querySelectorAll ? el.querySelectorAll(".challenge-solves") : [];
-				if (el.classList && el.classList.contains("challenge-solves")) {
-					solveEls = [el];
-				}
-				solveEls.forEach(function(se) {
-					var txt = se.textContent;
-					if (txt && txt.indexOf("Solves") !== -1 && t.solves !== "Solves") {
-						se.textContent = txt.replace("Solves", t.solves);
-					}
-				});
-			}
-		});
-	});
+	// Translate submission status messages from API
+	function translateMessage(msg) {
+		if (!msg) return msg;
+		if (msg === "Correct") return t.correct;
+		if (msg === "Incorrect") return t.incorrect;
+		// "Incorrect but you already solved this" or "Correct but you already solved this"
+		if (msg.indexOf("but you already solved this") !== -1) {
+			var prefix = msg.split(" but ")[0];
+			var translatedPrefix = prefix === "Correct" ? t.correct : (prefix === "Incorrect" ? t.incorrect : prefix);
+			return translatedPrefix + " " + t.alreadySolved;
+		}
+		// "You're submitting flags too fast. Try again in X seconds."
+		if (msg.indexOf("submitting flags too fast") !== -1) {
+			var match = msg.match(/(\d+)/);
+			var secs = match ? match[1] : "60";
+			return t.tooFast + " " + secs + " " + t.seconds + ".";
+		}
+		// "Not accepted. Try again in X seconds"
+		if (msg.indexOf("Try again in") !== -1 && msg.indexOf("Not accepted") !== -1) {
+			var match = msg.match(/(\d+)/);
+			var secs = match ? match[1] : "60";
+			return t.tooFast + " " + secs + " " + t.seconds + ".";
+		}
+		// "CTFd is paused"
+		if (msg.indexOf("is paused") !== -1) {
+			var name = msg.replace(" is paused", "");
+			return name + " " + t.paused;
+		}
+		return msg;
+	}
+
+	// Patch "Solves" text and submission messages
 	var cw = document.getElementById("challenge-window");
 	if (cw) {
-		solvesObserver.observe(cw, { childList: true, subtree: true, characterData: true });
+		var cwObserver = new MutationObserver(function(mutations) {
+			mutations.forEach(function(m) {
+				if (m.type === "childList" || m.type === "characterData") {
+					var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+					if (!el) return;
+					// Translate "Solves" tab text
+					var solveEls = el.querySelectorAll ? el.querySelectorAll(".challenge-solves") : [];
+					if (el.classList && el.classList.contains("challenge-solves")) {
+						solveEls = [el];
+					}
+					solveEls.forEach(function(se) {
+						var txt = se.textContent;
+						if (txt && txt.indexOf("Solves") !== -1 && t.solves !== "Solves") {
+							se.textContent = txt.replace("Solves", t.solves);
+						}
+					});
+				}
+			});
+		});
+		cwObserver.observe(cw, { childList: true, subtree: true, characterData: true });
+
+		// Translate submission result messages
+		var msgObserver = new MutationObserver(function() {
+			var msgEl = document.getElementById("result-message");
+			if (msgEl && msgEl.textContent) {
+				var translated = translateMessage(msgEl.textContent);
+				if (translated !== msgEl.textContent) {
+					msgEl.textContent = translated;
+				}
+			}
+		});
+		msgObserver.observe(cw, { childList: true, subtree: true });
 	}
 
 	// Patch ezAlert/ezQuery modal strings
