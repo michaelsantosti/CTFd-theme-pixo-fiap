@@ -15,8 +15,13 @@
 		</div>
 	</div>
 
-	{% cache 60, CacheKeys.PUBLIC_SCOREBOARD_TABLE %}
-	{% if standings %}
+	<div id="bracket-tabs" class="row" style="display: none;">
+		<div class="col-md-12 py-3">
+			<nav class="nav nav-pills nav-fill" id="bracket-nav">
+			</nav>
+		</div>
+	</div>
+
 	<div id="scoreboard" class="row">
 		<div class="col-md-12">
 			<table class="table table-striped">
@@ -28,35 +33,10 @@
 					</tr>
 				</thead>
 				<tbody>
-				{% for standing in standings %}
-					<tr>
-						<th scope="row" class="text-center">{{ loop.index }}</th>
-						<td>
-							<a href="{{ generate_account_url(standing.account_id) }}">
-								{{ standing.name | truncate(50) }}
-
-								{% if standing.oauth_id %}
-									{% if Configs.user_mode == 'teams' %}
-									<a href="https://majorleaguecyber.org/t/{{ standing.name }}">
-										<span class="badge badge-primary">{% trans %}Official{% endtrans %}</span>
-									</a>
-									{% elif Configs.user_mode == 'users' %}
-									<a href="https://majorleaguecyber.org/u/{{ standing.name }}">
-										<span class="badge badge-primary">{% trans %}Official{% endtrans %}</span>
-									</a>
-									{% endif %}
-								{% endif %}
-							</a>
-						</td>
-						<td>{{ standing.score }}</td>
-					</tr>
-				{% endfor %}
 				</tbody>
 			</table>
 		</div>
 	</div>
-	{% endif %}
-	{% endcache %}
 </div>
 {% endblock %}
 
@@ -66,4 +46,192 @@
 
 {% block entrypoint %}
 	<script defer src="{{ url_for('views.themes', path='js/pages/scoreboard.js') }}"></script>
+	<script defer>
+	document.addEventListener("DOMContentLoaded", function() {
+		var urlRoot = (window.CTFd && CTFd.config.urlRoot) || "";
+		var userMode = (window.CTFd && CTFd.config.userMode) || "users";
+		var activeBracket = null;
+		var allStandings = [];
+		var brackets = [];
+		var headers = {
+			"Accept": "application/json",
+			"Content-Type": "application/json"
+		};
+
+		function fetchBrackets() {
+			return fetch(urlRoot + "/api/v1/brackets?type=" + userMode, {
+				method: "GET", credentials: "same-origin", headers: headers
+			})
+			.then(function(r) { return r.json(); })
+			.then(function(response) {
+				if (response.success && response.data && response.data.length > 0) {
+					brackets = response.data;
+					renderBracketTabs();
+				}
+			})
+			.catch(function() {});
+		}
+
+		function renderBracketTabs() {
+			var nav = document.getElementById("bracket-nav");
+			nav.innerHTML = "";
+
+			var allBtn = document.createElement("button");
+			allBtn.className = "nav-link active";
+			allBtn.textContent = "{% trans %}All{% endtrans %}";
+			allBtn.addEventListener("click", function() {
+				activeBracket = null;
+				updateActiveTab();
+				renderTable();
+				refreshGraph();
+			});
+			nav.appendChild(allBtn);
+
+			brackets.forEach(function(bracket) {
+				var btn = document.createElement("button");
+				btn.className = "nav-link";
+				btn.textContent = bracket.name;
+				btn.dataset.bracketId = bracket.id;
+				btn.addEventListener("click", function() {
+					activeBracket = bracket.id;
+					updateActiveTab();
+					renderTable();
+					refreshGraph();
+				});
+				nav.appendChild(btn);
+			});
+
+			document.getElementById("bracket-tabs").style.display = "";
+		}
+
+		function updateActiveTab() {
+			var nav = document.getElementById("bracket-nav");
+			var buttons = nav.querySelectorAll(".nav-link");
+			buttons.forEach(function(btn) {
+				if (activeBracket === null && !btn.dataset.bracketId) {
+					btn.classList.add("active");
+				} else if (btn.dataset.bracketId == activeBracket) {
+					btn.classList.add("active");
+				} else {
+					btn.classList.remove("active");
+				}
+			});
+		}
+
+		function fetchStandings() {
+			return fetch(urlRoot + "/api/v1/scoreboard", {
+				method: "GET", credentials: "same-origin", headers: headers
+			})
+			.then(function(r) { return r.json(); })
+			.then(function(response) {
+				if (response.success && response.data) {
+					allStandings = response.data;
+					renderTable();
+				}
+			});
+		}
+
+		function renderTable() {
+			var tbody = document.querySelector("#scoreboard tbody");
+			tbody.innerHTML = "";
+
+			var filtered = activeBracket
+				? allStandings.filter(function(s) { return s.bracket_id == activeBracket; })
+				: allStandings;
+
+			filtered.forEach(function(team, i) {
+				var tr = document.createElement("tr");
+
+				var thPlace = document.createElement("th");
+				thPlace.scope = "row";
+				thPlace.className = "text-center";
+				thPlace.textContent = i + 1;
+
+				var tdName = document.createElement("td");
+				var link = document.createElement("a");
+				link.href = team.account_url || (urlRoot + "/" + userMode + "/" + team.account_id);
+				link.textContent = team.name;
+				tdName.appendChild(link);
+
+				if (team.bracket_name && !activeBracket) {
+					var badge = document.createElement("span");
+					badge.className = "badge badge-secondary ml-2";
+					badge.textContent = team.bracket_name;
+					tdName.appendChild(badge);
+				}
+
+				var tdScore = document.createElement("td");
+				tdScore.textContent = team.score;
+
+				tr.appendChild(thPlace);
+				tr.appendChild(tdName);
+				tr.appendChild(tdScore);
+				tbody.appendChild(tr);
+			});
+		}
+
+		function refreshGraph() {
+			if (!window.echarts) return;
+			var bracketParam = activeBracket ? "?bracket_id=" + activeBracket : "";
+			fetch(urlRoot + "/api/v1/scoreboard/top/10" + bracketParam, {
+				method: "GET", credentials: "same-origin", headers: headers
+			})
+			.then(function(r) { return r.json(); })
+			.then(function(response) {
+				if (!response.success) return;
+				var places = response.data;
+				var teams = Object.keys(places);
+				if (teams.length === 0) return;
+
+				var graphEl = document.querySelector("#score-graph");
+				var chart = echarts.init(graphEl);
+				var option = chart.getOption();
+				if (!option || !option.series) return;
+
+				var newSeries = [];
+				var newLegend = [];
+				for (var i = 0; i < teams.length; i++) {
+					var teamData = places[teams[i]];
+					var scores = [];
+					var cumulative = 0;
+					for (var j = 0; j < teamData.solves.length; j++) {
+						cumulative += teamData.solves[j].value;
+						scores.push([new Date(teamData.solves[j].date), cumulative]);
+					}
+					newLegend.push(teamData.name);
+					newSeries.push({
+						name: teamData.name,
+						type: "line",
+						label: { normal: { position: "top" } },
+						data: scores
+					});
+				}
+
+				chart.setOption({
+					legend: { data: newLegend },
+					series: newSeries
+				}, { replaceMerge: ["series"] });
+			});
+		}
+
+		// Wait for CTFd to initialize, then fetch data
+		function init() {
+			if (!window.CTFd || !CTFd.config || !CTFd.config.urlRoot === undefined) {
+				setTimeout(init, 100);
+				return;
+			}
+			urlRoot = CTFd.config.urlRoot || "";
+			userMode = CTFd.config.userMode || "users";
+			headers["CSRF-Token"] = CTFd.config.csrfNonce;
+
+			fetchBrackets();
+			// Delay standings fetch to let the bundle render first
+			setTimeout(function() {
+				fetchStandings();
+			}, 1500);
+		}
+
+		init();
+	});
+	</script>
 {% endblock %}
