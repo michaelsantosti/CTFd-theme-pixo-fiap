@@ -20,9 +20,9 @@ const loadChal = id => {
 
   if (chal.type === "hidden") {
     ezAlert({
-      title: "Challenge Hidden!",
-      body: "You haven't unlocked this challenge yet!",
-      button: "Got it!"
+      title: (window._i18n && window._i18n.challengeHidden) || "Challenge Hidden!",
+      body: (window._i18n && window._i18n.notUnlocked) || "You haven't unlocked this challenge yet!",
+      button: (window._i18n && window._i18n.gotIt) || "Got it!"
     });
     return;
   }
@@ -186,7 +186,7 @@ function renderSubmissionResponse(response) {
             .split(" ")[0]
         ) +
           1 +
-          " Solves"
+          " " + ((window._i18n && window._i18n.solves) || "Solves")
       );
     }
 
@@ -239,7 +239,7 @@ function markSolves() {
 function getSolves(id) {
   return CTFd.api.get_challenge_solves({ challengeId: id }).then(response => {
     const data = response.data;
-    $(".challenge-solves").text(parseInt(data.length) + " Solves");
+    $(".challenge-solves").text(parseInt(data.length) + " " + ((window._i18n && window._i18n.solves) || "Solves"));
     const box = $("#challenge-solves-names");
     box.empty();
     for (let i = 0; i < data.length; i++) {
@@ -380,16 +380,16 @@ setInterval(update, 300000); // Update every 5 minutes.
 
 const displayHint = data => {
   ezAlert({
-    title: "Hint",
+    title: (window._i18n && window._i18n.hint) || "Hint",
     body: data.html,
-    button: "Got it!"
+    button: (window._i18n && window._i18n.gotIt) || "Got it!"
   });
 };
 
 const displayUnlock = id => {
   ezQuery({
-    title: "Unlock Hint?",
-    body: "Are you sure you want to open this hint?",
+    title: (window._i18n && window._i18n.unlockHint) || "Unlock Hint?",
+    body: (window._i18n && window._i18n.unlockHintConfirm) || "Are you sure you want to open this hint?",
     success: () => {
       const params = {
         target: id,
@@ -405,9 +405,9 @@ const displayUnlock = id => {
         }
 
         ezAlert({
-          title: "Error",
+          title: (window._i18n && window._i18n.error) || "Error",
           body: response.errors.score,
-          button: "Got it!"
+          button: (window._i18n && window._i18n.gotIt) || "Got it!"
         });
       });
     }

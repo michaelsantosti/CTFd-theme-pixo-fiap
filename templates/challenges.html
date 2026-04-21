@@ -32,6 +32,80 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+window._i18n = {
+	solves: "{% trans %}Solves{% endtrans %}",
+	challengeHidden: "{% trans %}Challenge Hidden!{% endtrans %}",
+	notUnlocked: "{% trans %}You haven't unlocked this challenge yet!{% endtrans %}",
+	gotIt: "{% trans %}Got it!{% endtrans %}",
+	hint: "{% trans %}Hint{% endtrans %}",
+	unlockHint: "{% trans %}Unlock Hint?{% endtrans %}",
+	unlockHintConfirm: "{% trans %}Are you sure you want to open this hint?{% endtrans %}",
+	error: "{% trans %}Error{% endtrans %}"
+};
+
+// Runtime i18n patch for compiled JS bundle
+(function() {
+	var t = window._i18n;
+	var modalStrings = {
+		"Challenge Hidden!": t.challengeHidden,
+		"You haven't unlocked this challenge yet!": t.notUnlocked,
+		"Got it!": t.gotIt,
+		"Hint": t.hint,
+		"Unlock Hint?": t.unlockHint,
+		"Are you sure you want to open this hint?": t.unlockHintConfirm,
+		"Error": t.error
+	};
+
+	// Patch "Solves" text set by JS bundle
+	var solvesObserver = new MutationObserver(function(mutations) {
+		mutations.forEach(function(m) {
+			if (m.type === "childList" || m.type === "characterData") {
+				var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+				if (!el) return;
+				var solveEls = el.querySelectorAll ? el.querySelectorAll(".challenge-solves") : [];
+				if (el.classList && el.classList.contains("challenge-solves")) {
+					solveEls = [el];
+				}
+				solveEls.forEach(function(se) {
+					var txt = se.textContent;
+					if (txt && txt.indexOf("Solves") !== -1 && t.solves !== "Solves") {
+						se.textContent = txt.replace("Solves", t.solves);
+					}
+				});
+			}
+		});
+	});
+	var cw = document.getElementById("challenge-window");
+	if (cw) {
+		solvesObserver.observe(cw, { childList: true, subtree: true, characterData: true });
+	}
+
+	// Patch ezAlert/ezQuery modal strings
+	var mainEl = document.querySelector("main");
+	if (mainEl) {
+		var modalObserver = new MutationObserver(function(mutations) {
+			mutations.forEach(function(m) {
+				m.addedNodes.forEach(function(node) {
+					if (node.nodeType !== 1) return;
+					var modal = node.classList && node.classList.contains("modal") ? node : null;
+					if (!modal) return;
+					var title = modal.querySelector(".modal-title");
+					if (title && modalStrings[title.textContent]) {
+						title.textContent = modalStrings[title.textContent];
+					}
+					modal.querySelectorAll(".modal-body p, .modal-footer button").forEach(function(el) {
+						if (modalStrings[el.textContent]) {
+							el.textContent = modalStrings[el.textContent];
+						}
+					});
+				});
+			});
+		});
+		modalObserver.observe(mainEl, { childList: true });
+	}
+})();
+</script>
 {% endblock %}
 
 {% block entrypoint %}
