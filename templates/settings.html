@@ -90,6 +90,13 @@
 							{{ form.expiration(class="form-control") }}
 						</div>
 
+						{% if form.description %}
+						<div class="form-group">
+							<b>{{ form.description.label }}</b>
+							{{ form.description(class="form-control", rows="3") }}
+						</div>
+						{% endif %}
+
 						<div class="form-group text-right">
 							{{ form.submit(class="btn btn-md btn-primary btn-outlined") }}
 						</div>
@@ -102,18 +109,18 @@
 					<table class="table table-striped">
 						<thead>
 							<tr>
-								<td class="text-center"><b>{% trans %}Type{% endtrans %}</b></td>
 								<td class="text-center"><b>{% trans %}Created{% endtrans %}</b></td>
 								<td class="text-center"><b>{% trans %}Expiration{% endtrans %}</b></td>
+								<td class="text-center"><b>{% trans %}Description{% endtrans %}</b></td>
 								<td class="text-center"><b>{% trans %}Delete{% endtrans %}</b></td>
 							</tr>
 						</thead>
 						<tbody>
 							{% for token in tokens %}
 							<tr>
-								<td>{{ token.type }}</td>
 								<td><span data-time="{{ token.created | isoformat }}"></span></td>
 								<td><span data-time="{{ token.expiration | isoformat }}"></span></td>
+								<td>{{ token.description | default('', true) }}</td>
 								<td class="text-center">
 									<span class="delete-token" role="button" data-token-id="{{ token.id }}">
 										<i class="btn-fa fas fa-times"></i>
