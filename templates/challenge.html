@@ -8,14 +8,30 @@
 				<li class="nav-item">
 					<a class="nav-link active" href="#challenge">{% trans %}Challenge{% endtrans %}</a>
 				</li>
-				{% block solves %}
-					<li class="nav-item">
-						<a class="nav-link challenge-solves" href="#solves">
-							{% if solves != None %}
-								{{ solves }} {% if solves > 1 %}{% trans %}Solves{% endtrans %}{% else %}{% trans %}Solves{% endtrans %}{% endif %}
-							{% endif %}
+				{% block solution %}
+					<li class="nav-item" id="solution-tab-nav" style="display: none;">
+						<a class="nav-link challenge-solution" href="#solution">
+							{% trans %}Solution{% endtrans %}
 						</a>
 					</li>
+				{% endblock %}
+				{% block submissions %}
+					{% if Configs.view_self_submissions == "true" %}
+					<li class="nav-item" id="submissions-tab-nav">
+						<a class="nav-link challenge-submissions" href="#submissions">
+							{% trans %}Submissions{% endtrans %}
+						</a>
+					</li>
+					{% endif %}
+				{% endblock %}
+				{% block solves %}
+					{% if solves != None %}
+					<li class="nav-item">
+						<a class="nav-link challenge-solves" href="#solves">
+							{{ solves }} {% if solves > 1 %}{% trans %}Solves{% endtrans %}{% else %}{% trans %}Solves{% endtrans %}{% endif %}
+						</a>
+					</li>
+					{% endif %}
 				{% endblock %}
 			</ul>
 			<div role="tabpanel">
@@ -27,6 +43,18 @@
 						<h3 class="challenge-value text-center">
 							{{ challenge.value }}
 						</h3>
+
+						{% if Configs.challenge_ratings == "public" and ratings %}
+						<div class="challenge-ratings text-center text-muted small mb-2">
+							<span><i class="fas fa-thumbs-up"></i> {{ ratings.up }}</span>
+							<span class="px-2">
+								{% if ratings.count %}
+								({{ ((ratings.up / (ratings.count)) * 100) | int }}% liked)
+								{% endif %}
+							</span>
+							<span><i class="fas fa-thumbs-down"></i> {{ ratings.down }}</span>
+						</div>
+						{% endif %}
 
 						<div class="challenge-tags text-center">
 							{% block tags %}
@@ -124,7 +152,55 @@
 								</div>
 							</div>
 						</div>
+
+						{% if Configs.challenge_ratings != "disabled" %}
+						<div id="rating-form" class="text-center" style="display: none;">
+							<hr>
+							<p class="mb-2">{% trans %}Rate this challenge:{% endtrans %}</p>
+							<div class="rating-buttons mb-2">
+								<button class="btn btn-outline-success mr-2 btn-rating-up" data-value="1">
+									<i class="fas fa-thumbs-up"></i>
+								</button>
+								<button class="btn btn-outline-danger btn-rating-down" data-value="-1">
+									<i class="fas fa-thumbs-down"></i>
+								</button>
+							</div>
+							<div class="mt-2">
+								<textarea id="rating-review" class="form-control" rows="2"
+									placeholder="{% trans %}Write a review (optional){% endtrans %}"
+									maxlength="2000"></textarea>
+							</div>
+							<div class="mt-2">
+								<button id="rating-submit" class="btn btn-primary btn-sm" disabled>
+									{% trans %}Submit{% endtrans %}
+								</button>
+							</div>
+							<div id="rating-success" class="text-success mt-2" style="display: none;">
+								<small>{% trans %}Thank you for your rating!{% endtrans %}</small>
+							</div>
+						</div>
+						{% endif %}
 					</div>
+
+					{% if Configs.view_self_submissions == "true" %}
+					<div role="tabpanel" class="tab-pane fade" id="submissions">
+						<div class="row">
+							<div class="col-md-12">
+								<table class="table table-striped text-center">
+									<thead>
+									<tr>
+										<th>{% trans %}Submission{% endtrans %}</th>
+										<th>{% trans %}Type{% endtrans %}</th>
+										<th>{% trans %}Date{% endtrans %}</th>
+									</tr>
+									</thead>
+									<tbody id="challenge-submission-names">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					{% endif %}
 
 					<div role="tabpanel" class="tab-pane fade" id="solves">
 						<div class="row">
@@ -143,8 +219,190 @@
 						</div>
 					</div>
 
+					<div role="tabpanel" class="tab-pane fade" id="solution">
+						<div class="row">
+							<div class="col-md-12">
+								<div class="challenge-solution-content pt-3" id="challenge-solution-content" style="white-space: pre-wrap;">
+								</div>
+							</div>
+						</div>
+					</div>
+
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+<script>
+(function() {
+	var challengeData = CTFd._internal.challenge.data;
+	var challengeId = challengeData ? challengeData.id : null;
+	var solutionId = challengeData ? challengeData.solution_id : null;
+	var urlRoot = CTFd.config.urlRoot || "";
+	var headers = {
+		"Accept": "application/json",
+		"Content-Type": "application/json",
+		"CSRF-Token": CTFd.config.csrfNonce
+	};
+
+	// ── Solution Tab ──
+	if (solutionId) {
+		$("#solution-tab-nav").show();
+	}
+
+	$(".challenge-solution").on("click", function(e) {
+		e.preventDefault();
+		$(this).tab("show");
+
+		var contentEl = $("#challenge-solution-content");
+		if (contentEl.data("loaded-id") == solutionId) {
+			return;
+		}
+
+		contentEl.html('<div class="text-center pt-3"><i class="fas fa-spinner fa-spin"></i></div>');
+
+		fetch(urlRoot + "/api/v1/solutions/" + solutionId, {
+			method: "GET", credentials: "same-origin", headers: headers
+		})
+		.then(function(r) { return r.json(); })
+		.then(function(response) {
+			if (response.success && response.data && response.data.html) {
+				contentEl.html(response.data.html);
+				contentEl.data("loaded-id", solutionId);
+				return;
+			}
+			return fetch(urlRoot + "/api/v1/unlocks", {
+				method: "POST", credentials: "same-origin", headers: headers,
+				body: JSON.stringify({ target: solutionId, type: "solutions" })
+			})
+			.then(function(r) { return r.json(); })
+			.then(function() {
+				return fetch(urlRoot + "/api/v1/solutions/" + solutionId, {
+					method: "GET", credentials: "same-origin", headers: headers
+				});
+			})
+			.then(function(r) { return r.json(); })
+			.then(function(response) {
+				if (response.success && response.data && response.data.html) {
+					contentEl.html(response.data.html);
+					contentEl.data("loaded-id", solutionId);
+				} else {
+					contentEl.html('<p class="text-center text-muted pt-3">Solution not available.</p>');
+				}
+			});
+		})
+		.catch(function() {
+			contentEl.html('<p class="text-center text-danger pt-3">Error loading solution.</p>');
+		});
+	});
+
+	// ── Submissions Tab ──
+	$(".challenge-submissions").on("click", function(e) {
+		e.preventDefault();
+		$(this).tab("show");
+
+		var tbody = $("#challenge-submission-names");
+		if (tbody.data("loaded")) {
+			return;
+		}
+
+		tbody.html('<tr><td colspan="3"><i class="fas fa-spinner fa-spin"></i></td></tr>');
+
+		fetch(urlRoot + "/api/v1/users/me/submissions?challenge_id=" + challengeId, {
+			method: "GET", credentials: "same-origin", headers: headers
+		})
+		.then(function(r) { return r.json(); })
+		.then(function(response) {
+			tbody.empty();
+			if (response.success && response.data) {
+				response.data.forEach(function(sub) {
+					var masked = "*".repeat(sub.provided.length);
+					var provided = $("<code>").text(masked);
+					var toggleBtn = $('<button class="btn btn-link p-0 pl-1"><i class="fas fa-eye"></i></button>');
+					var isHidden = true;
+					toggleBtn.on("click", function() {
+						isHidden = !isHidden;
+						provided.text(isHidden ? masked : sub.provided);
+						toggleBtn.find("i").attr("class", isHidden ? "fas fa-eye" : "fas fa-eye-slash");
+					});
+					var tdProvided = $("<td>").append(provided).append(toggleBtn);
+					var date = new Date(sub.date).toLocaleString();
+					var tr = $("<tr>")
+						.append(tdProvided)
+						.append($("<td>").text(sub.type))
+						.append($("<td>").text(date));
+					tbody.append(tr);
+				});
+				tbody.data("loaded", true);
+			}
+		});
+	});
+
+	// ── Challenge Ratings ──
+	var ratingForm = $("#rating-form");
+	var selectedRating = 0;
+
+	if (ratingForm.length && challengeData) {
+		// Pre-populate if user already rated
+		if (challengeData.rating) {
+			selectedRating = challengeData.rating.value;
+			if (selectedRating === 1) {
+				$(".btn-rating-up").addClass("active");
+			} else if (selectedRating === -1) {
+				$(".btn-rating-down").addClass("active");
+			}
+			if (challengeData.rating.review) {
+				$("#rating-review").val(challengeData.rating.review);
+			}
+			$("#rating-submit").prop("disabled", false);
+		}
+
+		// Show rating form if challenge was solved
+		if (challengeData.solved_by_me) {
+			ratingForm.show();
+		}
+	}
+
+	$(".btn-rating-up, .btn-rating-down").on("click", function() {
+		selectedRating = parseInt($(this).data("value"));
+		$(".btn-rating-up, .btn-rating-down").removeClass("active");
+		$(this).addClass("active");
+		$("#rating-submit").prop("disabled", false);
+	});
+
+	$("#rating-submit").on("click", function() {
+		var btn = $(this);
+		btn.prop("disabled", true);
+
+		fetch(urlRoot + "/api/v1/challenges/" + challengeId + "/ratings", {
+			method: "PUT", credentials: "same-origin", headers: headers,
+			body: JSON.stringify({
+				value: selectedRating,
+				review: $("#rating-review").val() || ""
+			})
+		})
+		.then(function(r) { return r.json(); })
+		.then(function(response) {
+			if (response.success) {
+				$("#rating-success").show();
+			} else {
+				btn.prop("disabled", false);
+			}
+		})
+		.catch(function() {
+			btn.prop("disabled", false);
+		});
+	});
+
+	// Show rating form when challenge is solved via submission
+	var origResultNotif = document.getElementById("result-notification");
+	if (origResultNotif && ratingForm.length) {
+		var ratingObserver = new MutationObserver(function() {
+			if ($("#result-notification").hasClass("alert-success")) {
+				ratingForm.show();
+			}
+		});
+		ratingObserver.observe(origResultNotif, { attributes: true, attributeFilter: ["class"] });
+	}
+})();
+</script>

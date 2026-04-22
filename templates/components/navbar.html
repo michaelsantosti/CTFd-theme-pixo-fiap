@@ -15,7 +15,7 @@
             <ul class="navbar-nav mr-auto">
                 {% for page in Plugins.user_menu_pages %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ page.route }}">{{ page.title }}</a>
+                        <a class="nav-link" href="{{ page.route }}"{% if page.link_target %} target="{{ page.link_target }}"{% endif %}>{{ page.title }}</a>
                     </li>
                 {% endfor %}
 
@@ -30,7 +30,7 @@
                     {% endif %}
                 {% endif %}
 
-                {% if Configs.score_visibility != 'admins' %}
+                {% if Configs.account_visibility != 'admins' and Configs.score_visibility != 'admins' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('scoreboard.listing') }}">{% trans %}Scoreboard{% endtrans %}</a>
                     </li>

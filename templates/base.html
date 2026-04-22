@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>{{ Configs.ctf_name }}</title>
+	<title>{{ title or Configs.ctf_name }}</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="shortcut icon" href="{{ Configs.ctf_small_icon }}" type="image/x-icon">
+
+	{{ meta | safe }}
+
 	<link rel="stylesheet" href="{{ url_for('views.themes', path='css/fonts.css') }}">
 	<link rel="preconnect" href="https://fonts.gstatic.com">
 	<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -15,15 +18,22 @@
 
 	{{ Plugins.styles }}
 	<script type="text/javascript">
-		var init = {
+		window.init = {
 			'urlRoot': "{{ request.script_root }}",
 			'csrfNonce': "{{ Session.nonce }}",
 			'userMode': "{{ Configs.user_mode }}",
 			'userId': {{ Session.id }},
+			'userName': {{ User.name | tojson }},
+			'userEmail': {{ User.email | tojson }},
+			'userVerified': {{ User.verified | tojson }},
+			'teamId': {{ Team.id | tojson }},
+			'teamName': {{ Team.name | tojson }},
 			'start': {{ Configs.start | tojson }},
 			'end': {{ Configs.end | tojson }},
-			'theme_settings': {{ Configs.theme_settings | tojson }}
+			'theme_settings': {{ Configs.theme_settings | tojson }},
+			'themeSettings': {{ Configs.theme_settings | tojson }}
 		}
+		var init = window.init;
 	</script>
 	{{ Configs.theme_header }}
 </head>
@@ -36,19 +46,7 @@
 		{% endblock %}
 	</main>
 
-<footer style="
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #AA42C3;
-  font-size: 10px;
-  text-align: center;
-">
-  <div class="container">
-    Powered by CTFd – Theme By PRI4CE
-  </div>
-</footer>
+	{% include "components/snackbar.html" %}
 
 	<script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
 	<script defer src="{{ url_for('views.themes', path='js/core.js') }}"></script>
