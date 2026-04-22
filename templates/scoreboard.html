@@ -226,12 +226,10 @@
 				});
 			});
 		}
-			});
-		}
 
 		// Wait for CTFd to initialize, then fetch data
 		function init() {
-			if (!window.CTFd || !CTFd.config || !CTFd.config.urlRoot === undefined) {
+			if (!window.CTFd || !CTFd.config || CTFd.config.urlRoot === undefined) {
 				setTimeout(init, 100);
 				return;
 			}
