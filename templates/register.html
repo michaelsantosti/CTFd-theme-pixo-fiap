@@ -26,22 +26,22 @@
 			{% from "macros/forms.html" import render_extra_fields %}
 			<form method="post" accept-charset="utf-8" autocomplete="off" role="form">
 				<div class="form-group">
-					<b>{{ form.name.label }}</b>
-					{{ form.name(class="form-control", value=name) }}
+					<b>{{ form.name.label }}</b> <span class="text-danger">*</span>
+					{{ form.name(class="form-control", value=name, autocomplete="username") }}
 					<small class="form-text text-muted">
 						{% trans %}Your username on the site{% endtrans %}
 					</small>
 				</div>
 				<div class="form-group">
-					<b>{{ form.email.label }}</b>
-					{{ form.email(class="form-control", value=email) }}
+					<b>{{ form.email.label }}</b> <span class="text-danger">*</span>
+					{{ form.email(class="form-control", value=email, autocomplete="email") }}
 					<small class="form-text text-muted">
 						{% trans %}Never shown to the public{% endtrans %}
 					</small>
 				</div>
 				<div class="form-group">
-					<b>{{ form.password.label }}</b>
-					{{ form.password(class="form-control", value=password) }}
+					<b>{{ form.password.label }}</b> <span class="text-danger">*</span>
+					{{ form.password(class="form-control", value=password, autocomplete="new-password") }}
 					<small class="form-text text-muted">
 						{% trans %}Password used to log into your account{% endtrans %}
 					</small>
