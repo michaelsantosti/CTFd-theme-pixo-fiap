@@ -67,7 +67,7 @@ Em seguida, acesse **Painel Admin > Config > Themes** e selecione `fiap-pixo`.
 
 ## Compatibilidade
 
-- CTFd **3.7.x** e superiores
+- CTFd **3.8.x**
 - Bootstrap **4.3.1** (incluido no bundle do tema)
 - jQuery (incluido no bundle do tema)
 
