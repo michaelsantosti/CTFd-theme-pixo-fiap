@@ -172,6 +172,10 @@
 
 		function refreshGraph() {
 			if (!window.echarts) return;
+			var graphEl = document.querySelector("#score-graph");
+			var chart = echarts.getInstanceByDom(graphEl);
+			if (!chart) return;
+
 			var bracketParam = activeBracket ? "?bracket_id=" + activeBracket : "";
 			fetch(urlRoot + "/api/v1/scoreboard/top/10" + bracketParam, {
 				method: "GET", credentials: "same-origin", headers: headers
@@ -181,12 +185,6 @@
 				if (!response.success) return;
 				var places = response.data;
 				var teams = Object.keys(places);
-				if (teams.length === 0) return;
-
-				var graphEl = document.querySelector("#score-graph");
-				var chart = echarts.init(graphEl);
-				var option = chart.getOption();
-				if (!option || !option.series) return;
 
 				var newSeries = [];
 				var newLegend = [];
@@ -207,10 +205,18 @@
 					});
 				}
 
+				var modeLabel = userMode === "teams" ? "Teams" : "Users";
 				chart.setOption({
-					legend: { data: newLegend },
+					title: { left: "center", text: "Top 10 " + modeLabel },
+					tooltip: { trigger: "axis", axisPointer: { type: "cross" } },
+					legend: { type: "scroll", orient: "horizontal", align: "left", bottom: 35, data: newLegend },
+					toolbox: { feature: { dataZoom: { yAxisIndex: "none" }, saveAsImage: {} } },
+					grid: { containLabel: true },
+					xAxis: [{ type: "time", boundaryGap: false, data: [] }],
+					yAxis: [{ type: "value" }],
+					dataZoom: [{ id: "dataZoomX", type: "slider", xAxisIndex: [0], filterMode: "filter", height: 20, top: 35, fillerColor: "rgba(233, 236, 241, 0.4)" }],
 					series: newSeries
-				}, { replaceMerge: ["series"] });
+				}, true);
 			});
 		}
 
