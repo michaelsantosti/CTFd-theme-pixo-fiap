@@ -173,8 +173,6 @@
 		function refreshGraph() {
 			if (!window.echarts) return;
 			var graphEl = document.querySelector("#score-graph");
-			var chart = echarts.getInstanceByDom(graphEl);
-			if (!chart) return;
 
 			var bracketParam = activeBracket ? "?bracket_id=" + activeBracket : "";
 			fetch(urlRoot + "/api/v1/scoreboard/top/10" + bracketParam, {
@@ -205,6 +203,11 @@
 					});
 				}
 
+				// Dispose existing chart and create fresh instance
+				var oldChart = echarts.getInstanceByDom(graphEl);
+				if (oldChart) oldChart.dispose();
+				var chart = echarts.init(graphEl);
+
 				var modeLabel = userMode === "teams" ? "Teams" : "Users";
 				chart.setOption({
 					title: { left: "center", text: "Top 10 " + modeLabel },
@@ -216,7 +219,13 @@
 					yAxis: [{ type: "value" }],
 					dataZoom: [{ id: "dataZoomX", type: "slider", xAxisIndex: [0], filterMode: "filter", height: 20, top: 35, fillerColor: "rgba(233, 236, 241, 0.4)" }],
 					series: newSeries
-				}, true);
+				});
+
+				$(window).off("resize.bracketChart").on("resize.bracketChart", function() {
+					chart.resize();
+				});
+			});
+		}
 			});
 		}
 
