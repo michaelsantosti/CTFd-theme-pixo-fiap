@@ -16,7 +16,7 @@
 					</li>
 				{% endblock %}
 				{% block submissions %}
-					{% if Configs.view_self_submissions == "true" %}
+					{% if Configs.view_self_submissions %}
 					<li class="nav-item" id="submissions-tab-nav">
 						<a class="nav-link challenge-submissions" href="#submissions">
 							{% trans %}Submissions{% endtrans %}
@@ -182,7 +182,7 @@
 						{% endif %}
 					</div>
 
-					{% if Configs.view_self_submissions == "true" %}
+					{% if Configs.view_self_submissions %}
 					<div role="tabpanel" class="tab-pane fade" id="submissions">
 						<div class="row">
 							<div class="col-md-12">
